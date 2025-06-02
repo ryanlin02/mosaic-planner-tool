@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬賽克拼貼創作工具</title>
+    <title>墘窯休閒陶坊-馬賽克拼貼創作工具</title>
     <style>
         * {
             margin: 0;
@@ -241,12 +241,133 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* 添加新的樣式 */
+        .file-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4ECDC4;
+        }
+        
+        .file-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            color: #28a745;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 改進按鈕樣式 */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        /* 改進載入動畫 */
+        .loading {
+            position: relative;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ECDC4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        .loading p {
+            position: relative;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎨 馬賽克拼貼創作工具</h1>
+            <h1>🎨 墘窯休閒陶坊-馬賽克拼貼創作工具</h1>
             <p>自動化顏色比對，生成精確座標清單</p>
         </div>
         
@@ -509,6 +630,36 @@
         document.getElementById('image-upload').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
+                // 檢查檔案大小（限制為10MB）
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('檔案大小不能超過10MB！');
+                    this.value = '';
+                    return;
+                }
+                
+                // 檢查檔案類型
+                if (!file.type.startsWith('image/')) {
+                    alert('請上傳圖片檔案！');
+                    this.value = '';
+                    return;
+                }
+                
+                // 顯示檔案資訊
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                fileInfo.innerHTML = `
+                    <p>檔案名稱：${file.name}</p>
+                    <p>檔案大小：${(file.size / 1024 / 1024).toFixed(2)}MB</p>
+                    <p>檔案類型：${file.type}</p>
+                `;
+                
+                // 移除舊的檔案資訊
+                const oldInfo = document.querySelector('.file-info');
+                if (oldInfo) oldInfo.remove();
+                
+                // 插入新的檔案資訊
+                this.parentElement.appendChild(fileInfo);
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
@@ -517,7 +668,13 @@
                         displayImage(img);
                         showResizeSection();
                     };
+                    img.onerror = function() {
+                        alert('圖片載入失敗，請重試！');
+                    };
                     img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    alert('檔案讀取失敗，請重試！');
                 };
                 reader.readAsDataURL(file);
             }
@@ -885,7 +1042,6 @@
         
         // 生成工作清單
         async function generateWorkList() {
-            // 使用調整後的圖片數據，如果沒有則使用原始數據
             const currentImageData = resizedImageData || imageData;
             
             if (!currentImageData) {
@@ -939,88 +1095,107 @@
                 colorMap: {}
             };
             
-            // 逐像素處理
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const index = (y * width + x) * 4;
-                    const r = data[index];
-                    const g = data[index + 1];
-                    const b = data[index + 2];
-                    
-                    // 找最接近的磁磚顏色
-                    let bestTile = tiles[0];
-                    let minDistance = colorDistance(r, g, b, bestTile.r, bestTile.g, bestTile.b);
-                    
-                    for (let i = 1; i < tiles.length; i++) {
-                        const distance = colorDistance(r, g, b, tiles[i].r, tiles[i].g, tiles[i].b);
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                            bestTile = tiles[i];
+            // 分批處理參數
+            const BATCH_SIZE = 1000; // 每批處理的像素數
+            const DELAY = 10; // 每批處理後的延遲（毫秒）
+            
+            // 分批處理函數
+            async function processBatch(startY) {
+                const endY = Math.min(startY + BATCH_SIZE / width, height);
+                
+                for (let y = startY; y < endY; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const index = (y * width + x) * 4;
+                        const r = data[index];
+                        const g = data[index + 1];
+                        const b = data[index + 2];
+                        
+                        // 找最接近的磁磚顏色
+                        let bestTile = tiles[0];
+                        let minDistance = colorDistance(r, g, b, bestTile.r, bestTile.g, bestTile.b);
+                        
+                        for (let i = 1; i < tiles.length; i++) {
+                            const distance = colorDistance(r, g, b, tiles[i].r, tiles[i].g, tiles[i].b);
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                bestTile = tiles[i];
+                            }
                         }
+                        
+                        // 記錄到工作清單
+                        workList += `[${x + 1}, ${y + 1}] - ${bestTile.name} (${bestTile.hex})\n`;
+                        
+                        // 統計顏色使用次數
+                        colorCount[bestTile.name] = (colorCount[bestTile.name] || 0) + 1;
+                        
+                        // 存儲馬賽克數據
+                        window.mosaicData.tiles.push({
+                            x: x,
+                            y: y,
+                            color: bestTile,
+                            originalColor: {r, g, b}
+                        });
+                        window.mosaicData.colorMap[`${x},${y}`] = bestTile;
                     }
                     
-                    // 記錄到工作清單
-                    workList += `[${x + 1}, ${y + 1}] - ${bestTile.name} (${bestTile.hex})\n`;
-                    
-                    // 統計顏色使用次數
-                    colorCount[bestTile.name] = (colorCount[bestTile.name] || 0) + 1;
-                    
-                    // 存儲馬賽克數據
-                    window.mosaicData.tiles.push({
-                        x: x,
-                        y: y,
-                        color: bestTile,
-                        originalColor: {r, g, b}
-                    });
-                    window.mosaicData.colorMap[`${x},${y}`] = bestTile;
+                    // 更新進度
+                    const progress = ((y + 1) / height) * 100;
+                    progressBar.style.width = progress + '%';
                 }
                 
-                // 更新進度
-                const progress = ((y + 1) / height) * 100;
-                progressBar.style.width = progress + '%';
-                
-                // 讓瀏覽器有機會更新UI
-                if (y % 10 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 1));
+                // 如果還有未處理的行，繼續處理下一批
+                if (endY < height) {
+                    await new Promise(resolve => setTimeout(resolve, DELAY));
+                    await processBatch(endY);
                 }
             }
             
-            const endTime = Date.now();
-            const processingTime = ((endTime - startTime) / 1000).toFixed(1);
-            
-            // 添加統計資訊到工作清單
-            workListData = `馬賽克拼貼工作清單\n`;
-            workListData += `圖片尺寸：${width} x ${height} 像素\n`;
-            workListData += `總磁磚數：${width * height} 個\n`;
-            workListData += `使用顏色數：${Object.keys(colorCount).length} 種\n`;
-            workListData += `處理時間：${processingTime} 秒\n`;
-            workListData += `生成時間：${new Date().toLocaleString()}\n\n`;
-            
-            workListData += `各顏色使用統計：\n`;
-            for (const [colorName, count] of Object.entries(colorCount)) {
-                workListData += `${colorName}：${count} 個\n`;
+            try {
+                // 開始分批處理
+                await processBatch(0);
+                
+                const endTime = Date.now();
+                const processingTime = ((endTime - startTime) / 1000).toFixed(1);
+                
+                // 添加統計資訊到工作清單
+                workListData = `馬賽克拼貼工作清單\n`;
+                workListData += `圖片尺寸：${width} x ${height} 像素\n`;
+                workListData += `總磁磚數：${width * height} 個\n`;
+                workListData += `使用顏色數：${Object.keys(colorCount).length} 種\n`;
+                workListData += `處理時間：${processingTime} 秒\n`;
+                workListData += `生成時間：${new Date().toLocaleString()}\n\n`;
+                
+                workListData += `各顏色使用統計：\n`;
+                for (const [colorName, count] of Object.entries(colorCount)) {
+                    workListData += `${colorName}：${count} 個\n`;
+                }
+                workListData += `\n詳細座標清單：\n`;
+                workListData += `格式說明：[X座標, Y座標] - 磁磚名稱 (顏色代碼)\n\n`;
+                workListData += workList;
+                
+                // 顯示結果
+                document.getElementById('work-list').textContent = workListData;
+                document.getElementById('loading').style.display = 'none';
+                
+                // 顯示統計資訊
+                document.getElementById('total-pixels').textContent = (width * height).toLocaleString();
+                document.getElementById('colors-used').textContent = Object.keys(colorCount).length;
+                document.getElementById('processing-time').textContent = processingTime;
+                document.getElementById('stats-area').style.display = 'grid';
+                
+                progressBar.style.width = '100%';
+                
+                // 顯示預覽區域
+                document.getElementById('preview-section').style.display = 'block';
+                
+                // 自動生成原始圖片預覽
+                setupOriginalPreview();
+                
+            } catch (error) {
+                console.error('處理過程發生錯誤：', error);
+                alert('處理過程發生錯誤，請重試！');
+                document.getElementById('loading').style.display = 'none';
             }
-            workListData += `\n詳細座標清單：\n`;
-            workListData += `格式說明：[X座標, Y座標] - 磁磚名稱 (顏色代碼)\n\n`;
-            workListData += workList;
-            
-            // 顯示結果
-            document.getElementById('work-list').textContent = workListData;
-            document.getElementById('loading').style.display = 'none';
-            
-            // 顯示統計資訊
-            document.getElementById('total-pixels').textContent = (width * height).toLocaleString();
-            document.getElementById('colors-used').textContent = Object.keys(colorCount).length;
-            document.getElementById('processing-time').textContent = processingTime;
-            document.getElementById('stats-area').style.display = 'grid';
-            
-            progressBar.style.width = '100%';
-            
-            // 顯示預覽區域
-            document.getElementById('preview-section').style.display = 'block';
-            
-            // 自動生成原始圖片預覽
-            setupOriginalPreview();
         }
         
         // 下載工作清單
