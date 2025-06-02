@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬賽克拼貼創作工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        
+        .section:hover {
+            border-color: #4ECDC4;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4ECDC4;
+            font-size: 1.5em;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="file"], input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="file"]:focus, input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #4ECDC4;
+        }
+        
+        .color-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #ccc;
+            cursor: pointer;
+        }
+        
+        .color-name {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-add {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        }
+        
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        #preview-canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            max-width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .result-area {
+            background: white;
+            border: 2px solid #4ECDC4;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        #work-list {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ECDC4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 馬賽克拼貼創作工具</h1>
+            <p>自動化顏色比對，生成精確座標清單</p>
+        </div>
+        
+        <div class="content">
+            <!-- 步驟1: 上傳圖片 -->
+            <div class="section">
+                <h2>📷 步驟1：上傳您的圖片</h2>
+                <div class="input-group">
+                    <label for="image-upload">選擇已調整解析度的圖片：</label>
+                    <input type="file" id="image-upload" accept="image/*">
+                </div>
+                <div class="canvas-container">
+                    <canvas id="preview-canvas"></canvas>
+                </div>
+            </div>
+            
+            <!-- 步驟2: 調整解析度 -->
+            <div class="section" id="resize-section" style="display: none;">
+                <h2>📐 步驟2：調整圖片解析度</h2>
+                
+                <!-- 原始圖片資訊 -->
+                <div class="input-group">
+                    <label>原始圖片尺寸：<span id="original-size">未載入圖片</span></label>
+                    <label>原始長寬比：<span id="original-ratio">--</span></label>
+                </div>
+                
+                <!-- 快速比例選擇 -->
+                <div class="input-group">
+                    <label>常用馬賽克比例快速選擇：</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                        <button class="btn" onclick="setPresetRatio(4, 3)" style="padding: 8px 12px; font-size: 14px;">4:3 (1024x768)</button>
+                        <button class="btn" onclick="setPresetRatio(16, 9)" style="padding: 8px 12px; font-size: 14px;">16:9 (1024x576)</button>
+                        <button class="btn" onclick="setPresetRatio(1, 1)" style="padding: 8px 12px; font-size: 14px;">1:1 (1024x1024)</button>
+                        <button class="btn" onclick="setPresetRatio(3, 2)" style="padding: 8px 12px; font-size: 14px;">3:2 (1024x683)</button>
+                        <button class="btn" onclick="setPresetRatio(2, 1)" style="padding: 8px 12px; font-size: 14px;">2:1 (1024x512)</button>
+                        <button class="btn" onclick="useOriginalRatio()" style="padding: 8px 12px; font-size: 14px;">🔄 原始比例</button>
+                    </div>
+                </div>
+                
+                <!-- 尺寸設定區域 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label for="target-width">目標寬度（像素）：</label>
+                        <input type="number" id="target-width" min="16" max="2048" value="1024" 
+                               oninput="onDimensionChange('width')" onchange="onDimensionChange('width')">
+                        <small style="color: #666;">建議範圍：16-2048</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="target-height">目標高度（像素）：</label>
+                        <input type="number" id="target-height" min="16" max="2048" value="768" 
+                               oninput="onDimensionChange('height')" onchange="onDimensionChange('height')">
+                        <small style="color: #666;">建議範圍：16-2048</small>
+                    </div>
+                </div>
+                
+                <!-- 比例控制選項 -->
+                <div class="input-group">
+                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="keep-aspect-ratio" checked onchange="toggleAspectRatio()">
+                            🔒 鎖定長寬比例
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="ratio-base" value="width" checked onchange="updateTargetSize()">
+                            以寬度為基準
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="ratio-base" value="height" onchange="updateTargetSize()">
+                            以高度為基準
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="ratio-base" value="auto" onchange="updateTargetSize()">
+                            智能選擇
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 結果預覽 -->
+                <div class="input-group">
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #4ECDC4;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <strong>調整後尺寸：</strong><br>
+                                <span id="adjusted-size" style="font-size: 1.2em; color: #2c3e50;">1024 x 768 像素</span>
+                            </div>
+                            <div>
+                                <strong>新長寬比：</strong><br>
+                                <span id="new-ratio" style="font-size: 1.2em; color: #2c3e50;">4:3</span>
+                            </div>
+                            <div>
+                                <strong>總磁磚數：</strong><br>
+                                <span id="total-tiles" style="font-size: 1.2em; color: #e74c3c;">786,432 個</span>
+                            </div>
+                            <div>
+                                <strong>縮放比例：</strong><br>
+                                <span id="scale-info" style="font-size: 1.2em; color: #8e44ad;">--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 效能提醒 -->
+                        <div id="performance-warning" style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px; display: none;">
+                            ⚠️ <strong>提醒：</strong>磁磚數量較多，處理時間可能較長。建議控制在100萬個磁磚以內以獲得最佳體驗。
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="resizeImage()">🔄 套用新解析度</button>
+                
+                <div class="canvas-container">
+                    <canvas id="resized-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 步驟3: 設定磁磚顏色 -->
+            <div class="section">
+                <h2>🎯 步驟3：建立磁磚顏色資料庫</h2>
+                <p style="margin-bottom: 15px; color: #666;">點擊顏色方塊來選擇顏色，或輸入RGB值</p>
+                <button class="btn btn-add" onclick="addColorTile()">+ 新增磁磚顏色</button>
+                <button class="btn" onclick="loadSampleColors()">載入範例顏色</button>
+                <button class="btn" onclick="clearAllColors()">清空所有顏色</button>
+                
+                <div id="color-tiles" class="color-inputs">
+                    <!-- 動態生成的顏色選項 -->
+                </div>
+            </div>
+            
+            <!-- 步驟4: 生成工作清單 -->
+            <div class="section">
+                <h2>⚙️ 步驟4：生成馬賽克工作清單</h2>
+                <button class="btn" onclick="generateWorkList()">🚀 開始分析並生成清單</button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>正在分析圖片並比對顏色，請稍候...</p>
+                </div>
+                
+                <div class="progress">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                
+                <div class="stats" id="stats-area" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-pixels">0</div>
+                        <div>總像素數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="colors-used">0</div>
+                        <div>使用顏色數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="processing-time">0</div>
+                        <div>處理時間(秒)</div>
+                    </div>
+                </div>
+                
+                <div class="result-area">
+                    <h3>📋 工作清單：</h3>
+                    <p style="margin-bottom: 10px; color: #666;">格式：[X座標, Y座標] - 磁磚名稱 (RGB值)</p>
+                    <button class="btn" onclick="downloadWorkList()">📥 下載清單</button>
+                    <button class="btn" onclick="copyWorkList()">📋 複製清單</button>
+                    <div id="work-list">工作清單將在這裡顯示...</div>
+                </div>
+            </div>
+            
+            <!-- 步驟5: 馬賽克效果預覽 -->
+            <div class="section" id="preview-section" style="display: none;">
+                <h2>🎨 步驟5：馬賽克拼貼效果預覽</h2>
+                <p style="margin-bottom: 20px; color: #666;">
+                    查看套用您的磁磚顏色後的馬賽克拼貼效果，幫助您在實際製作前評估整體視覺效果。
+                </p>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn" onclick="generateMosaicPreview()">🎨 生成馬賽克預覽</button>
+                    <button class="btn" onclick="toggleGridLines()">📏 切換格線顯示</button>
+                    <button class="btn" onclick="downloadMosaicPreview()">📥 下載預覽圖</button>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label for="preview-scale">預覽縮放：</label>
+                        <select id="preview-scale" onchange="updatePreviewScale()">
+                            <option value="1">100% (原始)</option>
+                            <option value="2" selected>200% (放大)</option>
+                            <option value="4">400% (大幅放大)</option>
+                            <option value="0.5">50% (縮小)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 預覽對比區域 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="text-align: center; margin-bottom: 10px; color: #555;">📷 原始圖片</h4>
+                        <div class="canvas-container">
+                            <canvas id="original-preview" style="border: 2px solid #ddd; border-radius: 8px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="text-align: center; margin-bottom: 10px; color: #555;">🎨 馬賽克效果</h4>
+                        <div class="canvas-container">
+                            <canvas id="mosaic-preview" style="border: 2px solid #4ECDC4; border-radius: 8px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 預覽統計 -->
+                <div class="stats" id="preview-stats" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="preview-colors">0</div>
+                        <div>實際使用顏色</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="preview-tiles">0</div>
+                        <div>馬賽克磁磚數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="color-accuracy">0%</div>
+                        <div>顏色還原度</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="preview-resolution">0</div>
+                        <div>預覽解析度</div>
+                    </div>
+                </div>
+                
+                <!-- 預覽控制選項 -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <h4 style="margin-bottom: 15px;">🎛️ 預覽選項：</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="show-grid" onchange="toggleGridLines()">
+                            顯示磁磚格線
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="show-numbers" onchange="updateMosaicPreview()">
+                            顯示座標編號
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="high-contrast" onchange="updateMosaicPreview()">
+                            增強對比度
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="smooth-edges" checked onchange="updateMosaicPreview()">
+                            平滑邊緣
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let imageData = null;
+        let originalImage = null;
+        let resizedImageData = null;
+        let colorTiles = [];
+        let workListData = '';
+        let originalAspectRatio = 1;
+        let isUpdatingDimensions = false;
+        
+        // 上傳圖片處理
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        originalImage = img;
+                        displayImage(img);
+                        showResizeSection();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function displayImage(img) {
+            const canvas = document.getElementById('preview-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 設定canvas尺寸
+            const maxWidth = 600;
+            const scale = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            // 繪製圖片
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // 獲取原始尺寸的圖片數據
+            const dataCanvas = document.createElement('canvas');
+            const dataCtx = dataCanvas.getContext('2d');
+            dataCanvas.width = img.width;
+            dataCanvas.height = img.height;
+            dataCtx.drawImage(img, 0, 0);
+            
+            imageData = dataCtx.getImageData(0, 0, img.width, img.height);
+        }
+        
+        // 計算最大公約數（用於計算長寬比）
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+        
+        // 計算並格式化長寬比
+        function calculateRatio(width, height) {
+            const divisor = gcd(width, height);
+            const ratioW = width / divisor;
+            const ratioH = height / divisor;
+            
+            // 如果比例數字過大，顯示小數格式
+            if (ratioW > 20 || ratioH > 20) {
+                return (width / height).toFixed(2) + ':1';
+            }
+            
+            return ratioW + ':' + ratioH;
+        }
+        
+        // 顯示解析度調整區域
+        function showResizeSection() {
+            if (!originalImage) return;
+            
+            document.getElementById('resize-section').style.display = 'block';
+            originalAspectRatio = originalImage.width / originalImage.height;
+            
+            // 更新原始圖片資訊
+            document.getElementById('original-size').textContent = 
+                `${originalImage.width} x ${originalImage.height} 像素`;
+            document.getElementById('original-ratio').textContent = 
+                calculateRatio(originalImage.width, originalImage.height);
+            
+            // 設定智能預設目標尺寸
+            setSmartDefaultSize();
+            updateTargetSize();
+        }
+        
+        // 智能設定預設尺寸
+        function setSmartDefaultSize() {
+            const maxDimension = 1024;
+            let targetWidth, targetHeight;
+            
+            // 根據原始比例選擇合適的預設尺寸
+            if (originalAspectRatio > 1.5) {
+                // 寬圖片，以寬度1024為基準
+                targetWidth = maxDimension;
+                targetHeight = Math.round(maxDimension / originalAspectRatio);
+            } else if (originalAspectRatio < 0.7) {
+                // 高圖片，以高度1024為基準
+                targetHeight = maxDimension;
+                targetWidth = Math.round(maxDimension * originalAspectRatio);
+            } else {
+                // 接近正方形，保持原比例縮放到合適尺寸
+                const scale = Math.min(maxDimension / originalImage.width, maxDimension / originalImage.height);
+                targetWidth = Math.round(originalImage.width * scale);
+                targetHeight = Math.round(originalImage.height * scale);
+            }
+            
+            document.getElementById('target-width').value = targetWidth;
+            document.getElementById('target-height').value = targetHeight;
+        }
+        
+        // 設定預設比例
+        function setPresetRatio(ratioW, ratioH) {
+            const baseSize = 1024;
+            let targetWidth, targetHeight;
+            
+            if (ratioW >= ratioH) {
+                targetWidth = baseSize;
+                targetHeight = Math.round(baseSize * ratioH / ratioW);
+            } else {
+                targetHeight = baseSize;
+                targetWidth = Math.round(baseSize * ratioW / ratioH);
+            }
+            
+            document.getElementById('target-width').value = targetWidth;
+            document.getElementById('target-height').value = targetHeight;
+            document.getElementById('keep-aspect-ratio').checked = true;
+            
+            updateTargetSize();
+        }
+        
+        // 使用原始比例
+        function useOriginalRatio() {
+            if (!originalImage) return;
+            
+            const maxDimension = 1024;
+            const scale = Math.min(maxDimension / originalImage.width, maxDimension / originalImage.height);
+            const targetWidth = Math.round(originalImage.width * scale);
+            const targetHeight = Math.round(originalImage.height * scale);
+            
+            document.getElementById('target-width').value = targetWidth;
+            document.getElementById('target-height').value = targetHeight;
+            document.getElementById('keep-aspect-ratio').checked = true;
+            
+            updateTargetSize();
+        }
+        
+        // 當尺寸輸入改變時
+        function onDimensionChange(changedDimension) {
+            if (isUpdatingDimensions) return;
+            
+            const keepRatio = document.getElementById('keep-aspect-ratio').checked;
+            if (!keepRatio) {
+                updateTargetSize();
+                return;
+            }
+            
+            const widthInput = document.getElementById('target-width');
+            const heightInput = document.getElementById('target-height');
+            
+            let targetWidth = parseInt(widthInput.value) || 16;
+            let targetHeight = parseInt(heightInput.value) || 16;
+            
+            // 確保在範圍內
+            targetWidth = Math.max(16, Math.min(2048, targetWidth));
+            targetHeight = Math.max(16, Math.min(2048, targetHeight));
+            
+            isUpdatingDimensions = true;
+            
+            // 根據比例基準和改變的維度來調整
+            const ratioBase = document.querySelector('input[name="ratio-base"]:checked').value;
+            const useRatio = originalAspectRatio;
+            
+            if (ratioBase === 'auto') {
+                // 智能選擇：根據哪個輸入框改變來決定基準
+                if (changedDimension === 'width') {
+                    targetHeight = Math.round(targetWidth / useRatio);
+                    heightInput.value = targetHeight;
+                } else {
+                    targetWidth = Math.round(targetHeight * useRatio);
+                    widthInput.value = targetWidth;
+                }
+            } else if (ratioBase === 'width') {
+                targetHeight = Math.round(targetWidth / useRatio);
+                heightInput.value = targetHeight;
+            } else { // height
+                targetWidth = Math.round(targetHeight * useRatio);
+                widthInput.value = targetWidth;
+            }
+            
+            // 再次檢查範圍
+            if (targetWidth > 2048) {
+                targetWidth = 2048;
+                widthInput.value = targetWidth;
+                targetHeight = Math.round(targetWidth / useRatio);
+                heightInput.value = targetHeight;
+            }
+            if (targetHeight > 2048) {
+                targetHeight = 2048;
+                heightInput.value = targetHeight;
+                targetWidth = Math.round(targetHeight * useRatio);
+                widthInput.value = targetWidth;
+            }
+            
+            isUpdatingDimensions = false;
+            updateTargetSize();
+        }
+        
+        // 更新目標尺寸顯示
+        function updateTargetSize() {
+            if (isUpdatingDimensions) return;
+            
+            const targetWidth = parseInt(document.getElementById('target-width').value) || 16;
+            const targetHeight = parseInt(document.getElementById('target-height').value) || 16;
+            const totalTiles = targetWidth * targetHeight;
+            
+            // 更新顯示
+            document.getElementById('adjusted-size').textContent = 
+                `${targetWidth} x ${targetHeight} 像素`;
+            document.getElementById('new-ratio').textContent = 
+                calculateRatio(targetWidth, targetHeight);
+            document.getElementById('total-tiles').textContent = 
+                `${totalTiles.toLocaleString()} 個`;
+            
+            // 計算縮放比例
+            if (originalImage) {
+                const scaleX = (targetWidth / originalImage.width * 100).toFixed(1);
+                const scaleY = (targetHeight / originalImage.height * 100).toFixed(1);
+                if (Math.abs(scaleX - scaleY) < 0.1) {
+                    document.getElementById('scale-info').textContent = `${scaleX}%`;
+                } else {
+                    document.getElementById('scale-info').textContent = `寬${scaleX}% 高${scaleY}%`;
+                }
+            }
+            
+            // 效能警告
+            const warningDiv = document.getElementById('performance-warning');
+            if (totalTiles > 1000000) {
+                warningDiv.style.display = 'block';
+                warningDiv.innerHTML = '⚠️ <strong>提醒：</strong>磁磚數量超過100萬個，處理時間可能較長。建議適當降低解析度以獲得最佳體驗。';
+            } else if (totalTiles > 500000) {
+                warningDiv.style.display = 'block';
+                warningDiv.innerHTML = '💡 <strong>提示：</strong>磁磚數量較多，處理時間約需1-2分鐘。';
+            } else {
+                warningDiv.style.display = 'none';
+            }
+        }
+        
+        // 切換長寬比鎖定
+        function toggleAspectRatio() {
+            const keepRatio = document.getElementById('keep-aspect-ratio').checked;
+            const ratioControls = document.querySelectorAll('input[name="ratio-base"]');
+            
+            // 啟用/禁用比例基準選項
+            ratioControls.forEach(radio => {
+                radio.disabled = !keepRatio;
+                radio.parentElement.style.opacity = keepRatio ? '1' : '0.5';
+            });
+            
+            if (keepRatio) {
+                onDimensionChange('width'); // 觸發比例調整
+            } else {
+                updateTargetSize(); // 只更新顯示
+            }
+        }
+        
+        // 調整圖片尺寸
+        function resizeImage() {
+            if (!originalImage) {
+                alert('請先上傳圖片！');
+                return;
+            }
+            
+            const targetWidth = parseInt(document.getElementById('target-width').value);
+            const targetHeight = parseInt(document.getElementById('target-height').value);
+            
+            if (targetWidth <= 0 || targetHeight <= 0) {
+                alert('請輸入有效的尺寸！');
+                return;
+            }
+            
+            // 創建調整尺寸後的canvas
+            const resizedCanvas = document.getElementById('resized-canvas');
+            const ctx = resizedCanvas.getContext('2d');
+            
+            resizedCanvas.width = targetWidth;
+            resizedCanvas.height = targetHeight;
+            
+            // 使用高品質縮放
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // 繪製調整後的圖片
+            ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+            
+            // 獲取調整後的圖片數據
+            resizedImageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+            
+            // 顯示調整後的預覽（縮放顯示）
+            const maxDisplayWidth = 600;
+            const displayScale = Math.min(maxDisplayWidth / targetWidth, maxDisplayWidth / targetHeight, 1);
+            resizedCanvas.style.width = (targetWidth * displayScale) + 'px';
+            resizedCanvas.style.height = (targetHeight * displayScale) + 'px';
+            
+            alert(`圖片已調整為 ${targetWidth} x ${targetHeight} 像素！\n可以進行下一步設定磁磚顏色。`);
+        }
+        
+        // 新增磁磚顏色
+        function addColorTile() {
+            const colorId = 'color-' + Date.now();
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'color-item';
+            colorDiv.innerHTML = `
+                <input type="color" class="color-preview" value="#ffffff" onchange="updateColorPreview(this)">
+                <input type="text" class="color-name" placeholder="磁磚名稱（如：淺藍色-01）" value="磁磚-${colorTiles.length + 1}">
+                <button class="btn" onclick="removeColorTile(this)" style="padding: 5px 10px; margin: 0;">刪除</button>
+            `;
+            document.getElementById('color-tiles').appendChild(colorDiv);
+        }
+        
+        function removeColorTile(button) {
+            button.parentElement.remove();
+        }
+        
+        function updateColorPreview(colorInput) {
+            // 顏色已自動更新
+        }
+        
+        // 載入範例顏色
+        function loadSampleColors() {
+            const sampleColors = [
+                {name: '深紅色', color: '#8B0000'},
+                {name: '紅色', color: '#FF0000'},
+                {name: '橙色', color: '#FFA500'},
+                {name: '黃色', color: '#FFFF00'},
+                {name: '淺綠色', color: '#90EE90'},
+                {name: '綠色', color: '#008000'},
+                {name: '深綠色', color: '#006400'},
+                {name: '淺藍色', color: '#87CEEB'},
+                {name: '藍色', color: '#0000FF'},
+                {name: '深藍色', color: '#000080'},
+                {name: '紫色', color: '#800080'},
+                {name: '粉紅色', color: '#FFC0CB'},
+                {name: '白色', color: '#FFFFFF'},
+                {name: '淺灰色', color: '#D3D3D3'},
+                {name: '灰色', color: '#808080'},
+                {name: '深灰色', color: '#404040'},
+                {name: '黑色', color: '#000000'},
+                {name: '棕色', color: '#8B4513'}
+            ];
+            
+            // 清空現有顏色
+            document.getElementById('color-tiles').innerHTML = '';
+            
+            // 添加範例顏色
+            sampleColors.forEach(sample => {
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'color-item';
+                colorDiv.innerHTML = `
+                    <input type="color" class="color-preview" value="${sample.color}" onchange="updateColorPreview(this)">
+                    <input type="text" class="color-name" placeholder="磁磚名稱" value="${sample.name}">
+                    <button class="btn" onclick="removeColorTile(this)" style="padding: 5px 10px; margin: 0;">刪除</button>
+                `;
+                document.getElementById('color-tiles').appendChild(colorDiv);
+            });
+        }
+        
+        function clearAllColors() {
+            document.getElementById('color-tiles').innerHTML = '';
+        }
+        
+        // 顏色距離計算
+        function colorDistance(r1, g1, b1, r2, g2, b2) {
+            return Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
+        }
+        
+        // 十六進制轉RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+        
+        // 生成工作清單
+        async function generateWorkList() {
+            // 使用調整後的圖片數據，如果沒有則使用原始數據
+            const currentImageData = resizedImageData || imageData;
+            
+            if (!currentImageData) {
+                alert('請先上傳並調整圖片尺寸！');
+                return;
+            }
+            
+            // 收集磁磚顏色
+            const colorItems = document.querySelectorAll('.color-item');
+            const tiles = [];
+            
+            for (let item of colorItems) {
+                const colorInput = item.querySelector('.color-preview');
+                const nameInput = item.querySelector('.color-name');
+                const rgb = hexToRgb(colorInput.value);
+                
+                if (rgb && nameInput.value.trim()) {
+                    tiles.push({
+                        name: nameInput.value.trim(),
+                        r: rgb.r,
+                        g: rgb.g,
+                        b: rgb.b,
+                        hex: colorInput.value
+                    });
+                }
+            }
+            
+            if (tiles.length === 0) {
+                alert('請至少添加一種磁磚顏色！');
+                return;
+            }
+            
+            // 顯示載入狀態
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('stats-area').style.display = 'none';
+            
+            const startTime = Date.now();
+            const progressBar = document.getElementById('progress-bar');
+            let workList = '';
+            const colorCount = {};
+            
+            const width = currentImageData.width;
+            const height = currentImageData.height;
+            const data = currentImageData.data;
+            
+            // 存儲馬賽克數據供預覽使用
+            window.mosaicData = {
+                width: width,
+                height: height,
+                tiles: [],
+                colorMap: {}
+            };
+            
+            // 逐像素處理
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    
+                    // 找最接近的磁磚顏色
+                    let bestTile = tiles[0];
+                    let minDistance = colorDistance(r, g, b, bestTile.r, bestTile.g, bestTile.b);
+                    
+                    for (let i = 1; i < tiles.length; i++) {
+                        const distance = colorDistance(r, g, b, tiles[i].r, tiles[i].g, tiles[i].b);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            bestTile = tiles[i];
+                        }
+                    }
+                    
+                    // 記錄到工作清單
+                    workList += `[${x + 1}, ${y + 1}] - ${bestTile.name} (${bestTile.hex})\n`;
+                    
+                    // 統計顏色使用次數
+                    colorCount[bestTile.name] = (colorCount[bestTile.name] || 0) + 1;
+                    
+                    // 存儲馬賽克數據
+                    window.mosaicData.tiles.push({
+                        x: x,
+                        y: y,
+                        color: bestTile,
+                        originalColor: {r, g, b}
+                    });
+                    window.mosaicData.colorMap[`${x},${y}`] = bestTile;
+                }
+                
+                // 更新進度
+                const progress = ((y + 1) / height) * 100;
+                progressBar.style.width = progress + '%';
+                
+                // 讓瀏覽器有機會更新UI
+                if (y % 10 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            const endTime = Date.now();
+            const processingTime = ((endTime - startTime) / 1000).toFixed(1);
+            
+            // 添加統計資訊到工作清單
+            workListData = `馬賽克拼貼工作清單\n`;
+            workListData += `圖片尺寸：${width} x ${height} 像素\n`;
+            workListData += `總磁磚數：${width * height} 個\n`;
+            workListData += `使用顏色數：${Object.keys(colorCount).length} 種\n`;
+            workListData += `處理時間：${processingTime} 秒\n`;
+            workListData += `生成時間：${new Date().toLocaleString()}\n\n`;
+            
+            workListData += `各顏色使用統計：\n`;
+            for (const [colorName, count] of Object.entries(colorCount)) {
+                workListData += `${colorName}：${count} 個\n`;
+            }
+            workListData += `\n詳細座標清單：\n`;
+            workListData += `格式說明：[X座標, Y座標] - 磁磚名稱 (顏色代碼)\n\n`;
+            workListData += workList;
+            
+            // 顯示結果
+            document.getElementById('work-list').textContent = workListData;
+            document.getElementById('loading').style.display = 'none';
+            
+            // 顯示統計資訊
+            document.getElementById('total-pixels').textContent = (width * height).toLocaleString();
+            document.getElementById('colors-used').textContent = Object.keys(colorCount).length;
+            document.getElementById('processing-time').textContent = processingTime;
+            document.getElementById('stats-area').style.display = 'grid';
+            
+            progressBar.style.width = '100%';
+            
+            // 顯示預覽區域
+            document.getElementById('preview-section').style.display = 'block';
+            
+            // 自動生成原始圖片預覽
+            setupOriginalPreview();
+        }
+        
+        // 下載工作清單
+        function downloadWorkList() {
+            if (!workListData) {
+                alert('請先生成工作清單！');
+                return;
+            }
+            
+            const blob = new Blob([workListData], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `馬賽克工作清單_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 複製工作清單
+        function copyWorkList() {
+            if (!workListData) {
+                alert('請先生成工作清單！');
+                return;
+            }
+            
+            navigator.clipboard.writeText(workListData).then(() => {
+                alert('工作清單已複製到剪貼簿！');
+            }).catch(() => {
+                // 備用方法
+                const textArea = document.createElement('textarea');
+                textArea.value = workListData;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('工作清單已複製到剪貼簿！');
+            });
+        }
+        
+        // === 馬賽克預覽功能 ===
+        
+        // 設置原始圖片預覽
+        function setupOriginalPreview() {
+            const currentImageData = resizedImageData || imageData;
+            if (!currentImageData) return;
+            
+            const canvas = document.getElementById('original-preview');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = currentImageData.width;
+            canvas.height = currentImageData.height;
+            
+            ctx.putImageData(currentImageData, 0, 0);
+            
+            // 設置顯示尺寸
+            updatePreviewScale();
+        }
+        
+        // 生成馬賽克預覽
+        function generateMosaicPreview() {
+            if (!window.mosaicData) {
+                alert('請先生成工作清單！');
+                return;
+            }
+            
+            const canvas = document.getElementById('mosaic-preview');
+            const ctx = canvas.getContext('2d');
+            const mosaicData = window.mosaicData;
+            
+            canvas.width = mosaicData.width;
+            canvas.height = mosaicData.height;
+            
+            // 清除畫布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 設置繪製選項
+            const smoothEdges = document.getElementById('smooth-edges').checked;
+            const highContrast = document.getElementById('high-contrast').checked;
+            
+            if (!smoothEdges) {
+                ctx.imageSmoothingEnabled = false;
+            }
+            
+            // 繪製每個馬賽克磁磚
+            for (let tile of mosaicData.tiles) {
+                let r = tile.color.r;
+                let g = tile.color.g;
+                let b = tile.color.b;
+                
+                // 高對比度處理
+                if (highContrast) {
+                    r = Math.min(255, r * 1.2);
+                    g = Math.min(255, g * 1.2);
+                    b = Math.min(255, b * 1.2);
+                }
+                
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.fillRect(tile.x, tile.y, 1, 1);
+            }
+            
+            // 繪製格線
+            if (document.getElementById('show-grid').checked) {
+                drawGrid(ctx, mosaicData.width, mosaicData.height);
+            }
+            
+            // 繪製座標編號
+            if (document.getElementById('show-numbers').checked) {
+                drawNumbers(ctx, mosaicData.width, mosaicData.height);
+            }
+            
+            // 更新統計
+            updatePreviewStats();
+            
+            // 設置顯示尺寸
+            updatePreviewScale();
+        }
+        
+        // 繪製格線
+        function drawGrid(ctx, width, height) {
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.lineWidth = 0.1;
+            
+            // 避免格線太密集
+            const gridSpacing = Math.max(1, Math.floor(Math.min(width, height) / 100));
+            
+            for (let x = 0; x <= width; x += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= height; y += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // 繪製座標編號
+        function drawNumbers(ctx, width, height) {
+            const fontSize = Math.max(8, Math.min(width, height) / 50);
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.lineWidth = 1;
+            
+            const step = Math.max(10, Math.floor(Math.min(width, height) / 20));
+            
+            for (let x = 0; x < width; x += step) {
+                for (let y = 0; y < height; y += step) {
+                    const text = `${x+1},${y+1}`;
+                    ctx.strokeText(text, x + 2, y + fontSize);
+                    ctx.fillText(text, x + 2, y + fontSize);
+                }
+            }
+        }
+        
+        // 切換格線顯示
+        function toggleGridLines() {
+            updateMosaicPreview();
+        }
+        
+        // 更新馬賽克預覽
+        function updateMosaicPreview() {
+            if (window.mosaicData) {
+                generateMosaicPreview();
+            }
+        }
+        
+        // 更新預覽縮放
+        function updatePreviewScale() {
+            const scale = parseFloat(document.getElementById('preview-scale').value);
+            const originalCanvas = document.getElementById('original-preview');
+            const mosaicCanvas = document.getElementById('mosaic-preview');
+            
+            if (originalCanvas.width > 0) {
+                originalCanvas.style.width = (originalCanvas.width * scale) + 'px';
+                originalCanvas.style.height = (originalCanvas.height * scale) + 'px';
+            }
+            
+            if (mosaicCanvas.width > 0) {
+                mosaicCanvas.style.width = (mosaicCanvas.width * scale) + 'px';
+                mosaicCanvas.style.height = (mosaicCanvas.height * scale) + 'px';
+            }
+        }
+        
+        // 更新預覽統計
+        function updatePreviewStats() {
+            if (!window.mosaicData) return;
+            
+            const mosaicData = window.mosaicData;
+            const uniqueColors = new Set();
+            let totalColorDifference = 0;
+            
+            // 計算使用的顏色數和顏色準確度
+            for (let tile of mosaicData.tiles) {
+                uniqueColors.add(tile.color.hex);
+                
+                // 計算顏色差異
+                const diff = colorDistance(
+                    tile.originalColor.r, tile.originalColor.g, tile.originalColor.b,
+                    tile.color.r, tile.color.g, tile.color.b
+                );
+                totalColorDifference += diff;
+            }
+            
+            const averageColorDiff = totalColorDifference / mosaicData.tiles.length;
+            const colorAccuracy = Math.max(0, 100 - (averageColorDiff / 255 * 100));
+            
+            // 更新統計顯示
+            document.getElementById('preview-colors').textContent = uniqueColors.size;
+            document.getElementById('preview-tiles').textContent = mosaicData.tiles.length.toLocaleString();
+            document.getElementById('color-accuracy').textContent = colorAccuracy.toFixed(1) + '%';
+            document.getElementById('preview-resolution').textContent = `${mosaicData.width}×${mosaicData.height}`;
+            
+            document.getElementById('preview-stats').style.display = 'grid';
+        }
+        
+        // 下載馬賽克預覽圖
+        function downloadMosaicPreview() {
+            const canvas = document.getElementById('mosaic-preview');
+            if (canvas.width === 0) {
+                alert('請先生成馬賽克預覽！');
+                return;
+            }
+            
+            // 創建高解析度版本
+            const scale = 4; // 4倍解析度
+            const highResCanvas = document.createElement('canvas');
+            const highResCtx = highResCanvas.getContext('2d');
+            
+            highResCanvas.width = canvas.width * scale;
+            highResCanvas.height = canvas.height * scale;
+            
+            highResCtx.imageSmoothingEnabled = false;
+            highResCtx.scale(scale, scale);
+            highResCtx.drawImage(canvas, 0, 0);
+            
+            // 下載
+            highResCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `馬賽克預覽_${new Date().toISOString().slice(0, 10)}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // 初始化：添加一些預設的顏色輸入框
+        window.onload = function() {
+            for (let i = 0; i < 5; i++) {
+                addColorTile();
+            }
+        };
+    </script>
+</body>
+</html>
